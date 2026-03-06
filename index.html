@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude at Intuit — Self-Guided Training</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0077C5;
+    --dark-blue: #003D6B;
+    --teal: #00A3BF;
+    --green: #00875A;
+    --purple: #6B46C1;
+    --gold: #D97706;
+    --red: #DC2626;
+    --dark: #0F1923;
+    --mid: #4B5563;
+    --light-mid: #6B7280;
+    --light: #EFF6FF;
+    --light-green: #ECFDF5;
+    --light-purple: #F5F3FF;
+    --light-gold: #FFFBEB;
+    --light-teal: #E0F7FA;
+    --bg: #F0F4F8;
+    --white: #FFFFFF;
+    --border: #D1E0EE;
+    --sidebar-w: 270px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    display: flex;
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ─── SIDEBAR ───────────────────────────────────────────── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--dark-blue);
+    position: fixed; top: 0; left: 0; height: 100vh;
+    overflow-y: auto; z-index: 100;
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  #sidebar-header {
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .logo-mark {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .logo-mark .icon {
+    width: 36px; height: 36px; background: var(--teal);
+    border-radius: 9px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .logo-mark .brand { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); padding-left: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  #sidebar nav { padding: 14px 0; flex: 1; }
+  .nav-section {
+    padding: 10px 22px 4px;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.4px; color: rgba(255,255,255,0.3);
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 22px; cursor: pointer;
+    font-size: 13.5px; color: rgba(255,255,255,0.65);
+    border-left: 3px solid transparent;
+    transition: all 0.18s; border-radius: 0 8px 8px 0; margin: 1px 8px 1px 0;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: rgba(0,163,191,0.2); color: #fff; border-left-color: var(--teal); }
+  .nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+  .nav-item .nav-check {
+    margin-left: auto; width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); display: flex; align-items: center;
+    justify-content: center; font-size: 10px; color: transparent; flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .nav-item.done .nav-check { background: var(--green); color: white; }
+
+  .progress-bar-wrap {
+    padding: 18px 22px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px;
+  }
+  .progress-track { background: rgba(255,255,255,0.1); border-radius: 4px; height: 5px; }
+  .progress-fill { background: linear-gradient(90deg, var(--teal), #38BDF8); height: 5px; border-radius: 4px; transition: width 0.5s ease; }
+
+  /* ─── MAIN ───────────────────────────────────────────────── */
+  #main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; }
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── HERO ───────────────────────────────────────────────── */
+  .section-hero {
+    padding: 52px 60px 40px;
+    background: var(--dark-blue);
+    color: white; position: relative; overflow: hidden;
+  }
+  .section-hero::after {
+    content: ''; position: absolute; right: -60px; top: -60px;
+    width: 420px; height: 420px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,163,191,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 18px;
+  }
+  .section-hero h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 38px; font-weight: 700; line-height: 1.15;
+    margin-bottom: 14px; letter-spacing: -0.5px;
+  }
+  .section-hero p {
+    font-size: 15.5px; color: rgba(255,255,255,0.68);
+    max-width: 600px; line-height: 1.7;
+  }
+  .hero-meta {
+    display: flex; gap: 20px; margin-top: 22px; flex-wrap: wrap;
+  }
+  .hero-meta-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: rgba(255,255,255,0.55);
+  }
+  .hero-meta-item span { color: rgba(255,255,255,0.85); font-weight: 600; }
+
+  /* ─── CONTENT AREA ───────────────────────────────────────── */
+  .content { padding: 44px 60px 60px; max-width: 940px; }
+  .content h2 {
+    font-size: 22px; font-weight: 700; color: var(--dark);
+    margin: 40px 0 14px; letter-spacing: -0.3px;
+  }
+  .content h2:first-child { margin-top: 0; }
+  .content h3 { font-size: 16px; font-weight: 700; color: var(--dark); margin: 24px 0 10px; }
+  .content p { font-size: 14.5px; color: var(--mid); line-height: 1.75; margin-bottom: 14px; }
+  .content ul { padding-left: 22px; margin-bottom: 14px; }
+  .content li { font-size: 14.5px; color: var(--mid); line-height: 1.75; margin-bottom: 6px; }
+  .content strong { color: var(--dark); }
+
+  /* ─── CARDS ──────────────────────────────────────────────── */
+  .card-grid { display: grid; gap: 16px; margin: 20px 0; }
+  .card-grid.two { grid-template-columns: 1fr 1fr; }
+  .card-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); transform: translateY(-1px); }
+  .card-icon { font-size: 26px; margin-bottom: 10px; }
+  .card-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; margin-bottom: 8px;
+  }
+  .card h3 { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .card p { font-size: 13px; color: var(--mid); line-height: 1.65; margin: 0; }
+  .card ul { padding-left: 16px; margin-top: 8px; }
+  .card li { font-size: 13px; color: var(--mid); line-height: 1.65; margin-bottom: 4px; }
+  .card.blue { border-top: 3px solid var(--blue); }
+  .card.teal { border-top: 3px solid var(--teal); }
+  .card.green { border-top: 3px solid var(--green); }
+  .card.purple { border-top: 3px solid var(--purple); }
+  .card.gold { border-top: 3px solid var(--gold); }
+
+  /* ─── STATS ROW ──────────────────────────────────────────── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0; }
+  .stat-card {
+    background: white; border-radius: 12px; border: 1px solid var(--border);
+    padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .stat-num { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--light-mid); margin-top: 6px; line-height: 1.4; }
+
+  /* ─── COMPARISON TABLE ───────────────────────────────────── */
+  .compare-table { width: 100%; border-collapse: collapse; margin: 20px 0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+  .compare-table th { background: var(--dark-blue); color: white; padding: 13px 18px; text-align: left; font-size: 13px; font-weight: 600; }
+  .compare-table td { padding: 12px 18px; border-bottom: 1px solid var(--border); color: var(--mid); font-size: 13.5px; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:nth-child(even) td { background: #F8FAFB; }
+  .compare-table .aspect { font-weight: 700; color: var(--dark); width: 160px; }
+
+  /* ─── ACTIVITY BOXES ─────────────────────────────────────── */
+  .activity-box {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    margin: 24px 0; overflow: hidden;
+  }
+  .act-header {
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .act-num {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .act-title { font-size: 16px; font-weight: 700; color: var(--dark); }
+  .act-meta { font-size: 12px; color: var(--light-mid); margin-top: 2px; }
+  .act-body { padding: 22px 24px; }
+  .act-scenario {
+    background: #F8FAFB; border-radius: 8px; border: 1px solid var(--border);
+    padding: 14px 18px; margin-bottom: 16px;
+    font-size: 13.5px; color: var(--mid); line-height: 1.65;
+  }
+  .act-scenario strong { color: var(--dark); }
+
+  /* ─── PROMPT BOX ─────────────────────────────────────────── */
+  .prompt-box {
+    background: #0F1923; border-radius: 10px;
+    margin: 14px 0; padding: 16px 18px;
+    position: relative; border: 1px solid rgba(255,255,255,0.06);
+  }
+  .prompt-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--teal); margin-bottom: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+  .prompt-text {
+    font-size: 13.5px; color: #B8D4EE; line-height: 1.7;
+    font-family: 'DM Mono', monospace;
+  }
+  .prompt-highlight { color: #7DD3FC; }
+  .copy-btn {
+    position: absolute; top: 14px; right: 14px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.5); font-size: 11px; font-family: 'DM Sans', sans-serif;
+    padding: 4px 11px; border-radius: 5px; cursor: pointer;
+    transition: all 0.18s;
+  }
+  .copy-btn:hover { background: var(--teal); border-color: var(--teal); color: white; }
+  .copy-btn.copied { background: var(--green); border-color: var(--green); color: white; }
+
+  /* ─── TIPS & NOTES ───────────────────────────────────────── */
+  .tip {
+    background: var(--light-green); border-left: 4px solid var(--green);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0;
+    font-size: 13.5px; color: #065F46; line-height: 1.65;
+  }
+  .tip strong { color: #065F46; }
+  .note {
+    background: var(--light); border-left: 4px solid var(--blue);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0;
+    font-size: 13.5px; color: #1E40AF; line-height: 1.65;
+  }
+  .note strong { color: #1E3A8A; }
+  .warning {
+    background: var(--light-gold); border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0;
+    font-size: 13.5px; color: #92400E; line-height: 1.65;
+  }
+
+  /* ─── STEPS ──────────────────────────────────────────────── */
+  .steps { margin: 18px 0; }
+  .step { display: flex; gap: 16px; margin-bottom: 18px; align-items: flex-start; }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: white; margin-top: 1px;
+  }
+  .step-body h4 { font-size: 14.5px; font-weight: 600; color: var(--dark); margin-bottom: 4px; }
+  .step-body p { font-size: 13.5px; color: var(--mid); line-height: 1.65; margin: 0; }
+
+  /* ─── DIVIDER ────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ─── NAV BUTTONS ────────────────────────────────────────── */
+  .nav-buttons { display: flex; gap: 12px; margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .btn { padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.18s; font-family: 'DM Sans', sans-serif; }
+  .btn-primary { background: var(--blue); color: white; box-shadow: 0 2px 8px rgba(0,119,197,0.3); }
+  .btn-primary:hover { background: var(--dark-blue); box-shadow: 0 4px 14px rgba(0,119,197,0.4); transform: translateY(-1px); }
+  .btn-secondary { background: white; color: var(--mid); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* ─── BADGE ──────────────────────────────────────────────── */
+  .badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-blue { background: var(--light); color: var(--blue); }
+  .badge-green { background: var(--light-green); color: var(--green); }
+  .badge-teal { background: var(--light-teal); color: #007A8E; }
+  .badge-purple { background: var(--light-purple); color: var(--purple); }
+  .badge-gold { background: var(--light-gold); color: var(--gold); }
+
+  /* ─── DO / DON'T ─────────────────────────────────────────── */
+  .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .do-box { background: var(--light-green); border: 1px solid #A7F3D0; border-radius: 10px; padding: 18px; }
+  .do-box h4 { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dont-box { background: #FFF5F5; border: 1px solid #FECACA; border-radius: 10px; padding: 18px; }
+  .dont-box h4 { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .do-box li, .dont-box li { font-size: 13px; line-height: 1.65; margin-bottom: 6px; color: var(--mid); }
+
+  /* ─── TOOL CARDS ─────────────────────────────────────────── */
+  .tool-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    display: flex; gap: 18px; align-items: flex-start;
+    margin: 14px 0; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s;
+  }
+  .tool-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); }
+  .tool-icon {
+    width: 52px; height: 52px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .tool-info h3 { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
+  .tool-info .tool-tagline { font-size: 13px; color: var(--light-mid); margin-bottom: 10px; font-weight: 500; }
+  .tool-info p { font-size: 13.5px; color: var(--mid); line-height: 1.65; margin: 0; }
+  .tool-info ul { padding-left: 18px; margin-top: 8px; }
+  .tool-info li { font-size: 13px; color: var(--mid); line-height: 1.65; margin-bottom: 4px; }
+
+  /* ─── QUIZ ───────────────────────────────────────────────── */
+  .quiz-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 14px; padding: 26px; margin: 16px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .quiz-q { font-size: 15.5px; font-weight: 700; color: var(--dark); margin-bottom: 16px; }
+  .quiz-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 8px;
+    border: 1.5px solid var(--border); margin-bottom: 10px;
+    cursor: pointer; transition: all 0.18s; font-size: 14px; color: var(--mid);
+  }
+  .quiz-option:hover { border-color: var(--blue); background: var(--light); color: var(--dark); }
+  .quiz-option.correct { border-color: var(--green); background: var(--light-green); color: #065F46; font-weight: 600; }
+  .quiz-option.wrong { border-color: var(--red); background: #FFF5F5; color: #991B1B; }
+  .quiz-option.disabled { pointer-events: none; opacity: 0.55; }
+  .quiz-feedback {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    font-size: 13.5px; line-height: 1.6; display: none;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct { background: var(--light-green); color: #065F46; border: 1px solid #A7F3D0; }
+  .quiz-feedback.wrong { background: #FFF5F5; color: #991B1B; border: 1px solid #FECACA; }
+
+  /* ─── WELCOME SECTION ────────────────────────────────────── */
+  .welcome-hero {
+    background: linear-gradient(135deg, #002D52 0%, #003D6B 50%, #005A8E 100%);
+    padding: 60px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .welcome-hero::before {
+    content: '';
+    position: absolute; right: 0; top: 0; bottom: 0; left: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .welcome-hero::after {
+    content: ''; position: absolute; right: -80px; bottom: -80px;
+    width: 480px; height: 480px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,163,191,0.22) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .welcome-hero h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 44px; font-weight: 700; line-height: 1.1;
+    margin-bottom: 16px; position: relative; z-index: 1;
+    letter-spacing: -0.5px;
+  }
+  .welcome-hero h1 em { color: var(--teal); font-style: normal; }
+  .welcome-hero p {
+    font-size: 16px; color: rgba(255,255,255,0.7);
+    max-width: 540px; line-height: 1.7; margin-bottom: 28px;
+    position: relative; z-index: 1;
+  }
+  .welcome-chips { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .chip {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 20px;
+  }
+
+  .module-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 24px 0; }
+  .module-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .module-card:hover { box-shadow: 0 6px 22px rgba(0,0,0,0.1); transform: translateY(-2px); border-color: var(--blue); }
+  .module-num {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; font-weight: 700; color: white;
+  }
+  .module-info h3 { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
+  .module-info p { font-size: 13px; color: var(--light-mid); line-height: 1.5; margin: 0; }
+  .module-info .module-meta { font-size: 11.5px; color: var(--light-mid); margin-top: 8px; }
+
+  /* ─── SCROLLBAR ──────────────────────────────────────────── */
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════════ -->
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo-mark">
+      <div class="icon">🤖</div>
+      <div class="brand">Claude at Intuit</div>
+    </div>
+    <div class="logo-sub">Self-Guided Training</div>
+  </div>
+
+  <nav>
+    <div class="nav-section">Get Started</div>
+    <div class="nav-item active" onclick="navigate('welcome')" id="nav-welcome">
+      <span class="nav-icon">🏠</span> Welcome
+      <span class="nav-check">✓</span>
+    </div>
+
+    <div class="nav-section">Modules</div>
+    <div class="nav-item" onclick="navigate('what-is-claude')" id="nav-what-is-claude">
+      <span class="nav-icon">🧠</span> What Is Claude?
+      <span class="nav-check">✓</span>
+    </div>
+    <div class="nav-item" onclick="navigate('how-claude-works')" id="nav-how-claude-works">
+      <span class="nav-icon">⚙️</span> How Claude Works
+      <span class="nav-check">✓</span>
+    </div>
+    <div class="nav-item" onclick="navigate('tools-features')" id="nav-tools-features">
+      <span class="nav-icon">🛠️</span> Tools & Features
+      <span class="nav-check">✓</span>
+    </div>
+    <div class="nav-item" onclick="navigate('activities')" id="nav-activities">
+      <span class="nav-icon">✍️</span> Hands-On Activities
+      <span class="nav-check">✓</span>
+    </div>
+    <div class="nav-item" onclick="navigate('best-practices')" id="nav-best-practices">
+      <span class="nav-icon">⭐</span> Best Practices
+      <span class="nav-check">✓</span>
+    </div>
+    <div class="nav-item" onclick="navigate('quiz')" id="nav-quiz">
+      <span class="nav-icon">🎯</span> Knowledge Check
+      <span class="nav-check">✓</span>
+    </div>
+  </nav>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>Your Progress</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════════════ -->
+<main id="main">
+
+  <!-- ─── WELCOME ──────────────────────────────────────── -->
+  <div id="section-welcome" class="section active">
+    <div class="welcome-hero">
+      <h1>Welcome to<br><em>Claude at Intuit</em></h1>
+      <p>Your self-guided training to get up and running with Claude — Intuit's AI assistant. In about 45 minutes, you'll go from curious to confident.</p>
+      <div class="welcome-chips">
+        <div class="chip">⏱ ~45 minutes</div>
+        <div class="chip">🎯 All employees</div>
+        <div class="chip">💡 Hands-on activities</div>
+        <div class="chip">✅ Knowledge check</div>
+      </div>
+    </div>
+    <div class="content">
+      <h2>What You'll Learn</h2>
+      <p>This training covers everything you need to start using Claude effectively in your day-to-day work at Intuit. Whether you're in finance, engineering, marketing, or customer success — Claude can make your work faster, sharper, and more creative.</p>
+
+      <div class="module-grid">
+        <div class="module-card" onclick="navigate('what-is-claude')">
+          <div class="module-num" style="background:var(--blue)">1</div>
+          <div class="module-info">
+            <h3>What Is Claude?</h3>
+            <p>Understand what Claude is, how it fits at Intuit, and what it can do for you.</p>
+            <div class="module-meta">⏱ ~8 min</div>
+          </div>
+        </div>
+        <div class="module-card" onclick="navigate('how-claude-works')">
+          <div class="module-num" style="background:var(--teal)">2</div>
+          <div class="module-info">
+            <h3>How Claude Works</h3>
+            <p>Learn the basics of prompting, context, and getting great responses.</p>
+            <div class="module-meta">⏱ ~10 min</div>
+          </div>
+        </div>
+        <div class="module-card" onclick="navigate('tools-features')">
+          <div class="module-num" style="background:var(--purple)">3</div>
+          <div class="module-info">
+            <h3>Tools & Features</h3>
+            <p>Explore Claude Code, Cowork, the API, and other ways to use Claude at Intuit.</p>
+            <div class="module-meta">⏱ ~10 min</div>
+          </div>
+        </div>
+        <div class="module-card" onclick="navigate('activities')">
+          <div class="module-num" style="background:var(--green)">4</div>
+          <div class="module-info">
+            <h3>Hands-On Activities</h3>
+            <p>Practice with real-world Intuit scenarios and ready-to-use prompts.</p>
+            <div class="module-meta">⏱ ~12 min</div>
+          </div>
+        </div>
+        <div class="module-card" onclick="navigate('best-practices')">
+          <div class="module-num" style="background:var(--gold)">5</div>
+          <div class="module-info">
+            <h3>Best Practices</h3>
+            <p>Do's, don'ts, and tips to get the most out of Claude — safely and effectively.</p>
+            <div class="module-meta">⏱ ~7 min</div>
+          </div>
+        </div>
+        <div class="module-card" onclick="navigate('quiz')">
+          <div class="module-num" style="background:#DC2626">6</div>
+          <div class="module-info">
+            <h3>Knowledge Check</h3>
+            <p>Test what you've learned with a quick quiz before you wrap up.</p>
+            <div class="module-meta">⏱ ~5 min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 Tip:</strong> You can jump to any module using the sidebar. But if this is your first time, we recommend going in order — each module builds on the last.
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-primary" onclick="navigate('what-is-claude')">Start Module 1 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 1: WHAT IS CLAUDE ─────────────────────── -->
+  <div id="section-what-is-claude" class="section">
+    <div class="section-hero">
+      <div class="hero-tag">Module 1</div>
+      <h1>What Is Claude?</h1>
+      <p>Claude is an AI assistant made by Anthropic. At Intuit, it's your partner for writing, analysis, research, coding, brainstorming, and more.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~8 minutes</span></div>
+        <div class="hero-meta-item">📚 <span>3 topics</span></div>
+      </div>
+    </div>
+    <div class="content">
+      <h2>Meet Claude</h2>
+      <p>Claude is a large language model (LLM) — a type of AI that understands and generates human language. Unlike a simple chatbot, Claude can hold nuanced conversations, reason through complex problems, write polished content, and help you accomplish real work tasks.</p>
+      <p>At Intuit, Claude is available to all employees as a trusted productivity partner. It's designed to be helpful, harmless, and honest.</p>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--blue)">3+</div>
+          <div class="stat-label">Ways to access Claude at Intuit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--teal)">∞</div>
+          <div class="stat-label">Use cases across every team</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--green)">24/7</div>
+          <div class="stat-label">Available whenever you need it</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--purple)">100%</div>
+          <div class="stat-label">Enterprise-grade security</div>
+        </div>
+      </div>
+
+      <h2>What Can Claude Do for You?</h2>
+      <div class="card-grid two">
+        <div class="card blue">
+          <div class="card-icon">✍️</div>
+          <h3>Writing & Communication</h3>
+          <p>Drafting emails, slack messages, presentations, reports, and documentation — faster and better.</p>
+        </div>
+        <div class="card teal">
+          <div class="card-icon">🔍</div>
+          <h3>Research & Analysis</h3>
+          <p>Summarizing long documents, synthesizing information, answering complex questions.</p>
+        </div>
+        <div class="card green">
+          <div class="card-icon">💻</div>
+          <h3>Coding & Technical Work</h3>
+          <p>Writing, reviewing, explaining, and debugging code. Works across all major languages.</p>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">💡</div>
+          <h3>Brainstorming & Ideation</h3>
+          <p>Generating ideas, exploring options, playing devil's advocate, overcoming creative blocks.</p>
+        </div>
+        <div class="card gold">
+          <div class="card-icon">📊</div>
+          <h3>Data & Spreadsheets</h3>
+          <p>Writing formulas, interpreting data, building Excel logic, cleaning messy datasets.</p>
+        </div>
+        <div class="card blue">
+          <div class="card-icon">🎓</div>
+          <h3>Learning & Explanation</h3>
+          <p>Breaking down complex topics, explaining things in plain English, on-the-job coaching.</p>
+        </div>
+      </div>
+
+      <h2>Claude vs. Other AI Tools</h2>
+      <p>You may have heard of or used other AI tools. Here's how Claude compares:</p>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Claude</th>
+            <th>General AI Chatbots</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="aspect">Enterprise Security</td><td>✅ Built for Intuit's needs</td><td>⚠️ Varies by provider</td></tr>
+          <tr><td class="aspect">Long Documents</td><td>✅ Up to ~200K tokens</td><td>⚠️ Often limited</td></tr>
+          <tr><td class="aspect">Coding Support</td><td>✅ Claude Code + API</td><td>⚠️ Basic</td></tr>
+          <tr><td class="aspect">Tone & Nuance</td><td>✅ Highly nuanced</td><td>⚠️ Can be generic</td></tr>
+          <tr><td class="aspect">Honesty</td><td>✅ Says "I don't know"</td><td>⚠️ May hallucinate</td></tr>
+          <tr><td class="aspect">Intuit Integration</td><td>✅ Approved & supported</td><td>❌ Not integrated</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>📌 Important:</strong> Claude is approved for use at Intuit. Always follow Intuit's data handling policies — avoid entering highly sensitive customer PII or confidential financial data unless your specific tool has been cleared for it.
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('welcome')">← Back</button>
+        <button class="btn btn-primary" onclick="navigate('how-claude-works')">Module 2: How Claude Works →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 2: HOW CLAUDE WORKS ───────────────────── -->
+  <div id="section-how-claude-works" class="section">
+    <div class="section-hero" style="background: linear-gradient(135deg, #003D6B, #005A8E);">
+      <div class="hero-tag">Module 2</div>
+      <h1>How Claude Works</h1>
+      <p>Understanding how to talk to Claude — called "prompting" — is the single biggest factor in getting great results. Let's learn how.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~10 minutes</span></div>
+        <div class="hero-meta-item">📚 <span>4 topics</span></div>
+      </div>
+    </div>
+    <div class="content">
+      <h2>The Basics: Prompts & Responses</h2>
+      <p>When you type a message to Claude, that's called a <strong>prompt</strong>. Claude reads your prompt and generates a response. The quality of Claude's output depends almost entirely on the quality of your prompt.</p>
+      <p>Think of it like working with a brilliant, extremely capable new colleague. The more context and direction you give them, the better their work will be.</p>
+
+      <h2>The 4 Elements of a Great Prompt</h2>
+      <div class="card-grid two">
+        <div class="card blue">
+          <div class="card-label" style="color:var(--blue)">Element 1</div>
+          <h3>🎯 Role</h3>
+          <p>Tell Claude who to be. "Act as an experienced tax advisor" or "You are a senior software engineer reviewing code."</p>
+        </div>
+        <div class="card teal">
+          <div class="card-label" style="color:var(--teal)">Element 2</div>
+          <h3>📋 Context</h3>
+          <p>Give background. What project is this for? Who's the audience? What's already been tried? More context = better results.</p>
+        </div>
+        <div class="card green">
+          <div class="card-label" style="color:var(--green)">Element 3</div>
+          <h3>📝 Task</h3>
+          <p>Be specific about what you want. "Write a 3-paragraph summary" is better than "summarize this."</p>
+        </div>
+        <div class="card purple">
+          <div class="card-label" style="color:var(--purple)">Element 4</div>
+          <h3>📐 Format</h3>
+          <p>Specify the output. Do you want bullet points? A table? A numbered list? A formal tone? Tell Claude.</p>
+        </div>
+      </div>
+
+      <h2>Prompt Examples: Weak vs. Strong</h2>
+      <p>Here's the same request done poorly vs. done well:</p>
+
+      <div class="prompt-box">
+        <div class="prompt-label">❌ Weak Prompt</div>
+        <div class="prompt-text">Write an email about the product launch.</div>
+      </div>
+
+      <div class="prompt-box">
+        <div class="prompt-label">✅ Strong Prompt</div>
+        <button class="copy-btn" onclick="copyPrompt(this, 'strong1')">Copy</button>
+        <div class="prompt-text" id="strong1">You are a product marketing manager at a fintech company. Write a concise internal announcement email (150–200 words) to all employees about our new TurboTax Live feature launching next Tuesday. The tone should be energetic but professional. Include: what the feature does, why it matters to customers, and a call to action for employees to share on LinkedIn. Sign it from "The Product Team."</div>
+      </div>
+
+      <h2>Iterating with Claude</h2>
+      <p>You don't have to get the perfect prompt on the first try. Claude conversations are cumulative — you can refine as you go.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" style="background:var(--blue)">1</div>
+          <div class="step-body">
+            <h4>Start with a first draft prompt</h4>
+            <p>Ask Claude to tackle your task. Even an imperfect prompt will get you a useful starting point.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--teal)">2</div>
+          <div class="step-body">
+            <h4>Review and give feedback</h4>
+            <p>Read Claude's response. What do you like? What's missing? Tell Claude directly: "Make it shorter" or "Add a section on risks."</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--green)">3</div>
+          <div class="step-body">
+            <h4>Refine until it's right</h4>
+            <p>Keep iterating. Most great outputs come from 2–4 rounds of back-and-forth, not one perfect prompt.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2>Understanding Claude's Limitations</h2>
+      <div class="card-grid three">
+        <div class="card gold">
+          <h3>⏰ Knowledge Cutoff</h3>
+          <p>Claude's training data has a cutoff date. For current events or real-time data, verify with other sources.</p>
+        </div>
+        <div class="card gold">
+          <h3>🔢 Math & Logic</h3>
+          <p>Claude is good at explaining math, but can make calculation errors. Always verify numbers independently.</p>
+        </div>
+        <div class="card gold">
+          <h3>🤔 Hallucinations</h3>
+          <p>Claude may occasionally state things confidently that aren't accurate. Fact-check important claims.</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 Golden Rule:</strong> Claude is your co-pilot, not autopilot. Always review and take responsibility for the final output, especially for customer-facing or high-stakes content.
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('what-is-claude')">← Module 1</button>
+        <button class="btn btn-primary" onclick="navigate('tools-features')">Module 3: Tools & Features →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 3: TOOLS & FEATURES ───────────────────── -->
+  <div id="section-tools-features" class="section">
+    <div class="section-hero" style="background: linear-gradient(135deg, #3B0764, #5B21B6);">
+      <div class="hero-tag">Module 3</div>
+      <h1>Tools & Features</h1>
+      <p>Claude isn't just a chat window. At Intuit, there are multiple ways to access and integrate Claude into your workflow.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~10 minutes</span></div>
+        <div class="hero-meta-item">🛠 <span>5 tools covered</span></div>
+      </div>
+    </div>
+    <div class="content">
+      <h2>How You Can Access Claude</h2>
+      <p>Depending on your role and use case, there are several ways to work with Claude at Intuit:</p>
+
+      <div class="tool-card">
+        <div class="tool-icon" style="background:#EFF6FF;">💬</div>
+        <div class="tool-info">
+          <h3>Claude.ai Web & Mobile</h3>
+          <div class="tool-tagline">The main chat interface — available in your browser or on your phone</div>
+          <p>This is where most employees will start. You can have conversations, upload documents, ask questions, get drafts written, and more. It's available at <strong>claude.ai</strong>.</p>
+          <ul>
+            <li>Best for: writing, research, Q&A, brainstorming</li>
+            <li>Supports: file uploads, long documents, images</li>
+            <li>Available on: web, iOS, Android, desktop app</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon" style="background:#F0FDF4;">💻</div>
+        <div class="tool-info">
+          <h3>Claude Code</h3>
+          <div class="tool-tagline">An agentic coding assistant that lives in your terminal</div>
+          <p>Claude Code is a command-line tool for engineers. It can read your codebase, write new features, fix bugs, run tests, and take multi-step actions — all from your terminal.</p>
+          <ul>
+            <li>Best for: engineers, developers, technical roles</li>
+            <li>Can read & write files, run commands, use git</li>
+            <li>Install via npm: <code style="font-family:monospace;background:#F3F4F6;padding:2px 6px;border-radius:4px;">npm install -g @anthropic-ai/claude-code</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon" style="background:#ECFDF5;">🏠</div>
+        <div class="tool-info">
+          <h3>Cowork (Beta)</h3>
+          <div class="tool-tagline">A desktop agent for automating files and tasks — no coding required</div>
+          <p>Cowork is a desktop app that lets non-technical employees automate repetitive file and task management workflows. Think of it as having Claude directly on your computer, able to take actions on your behalf.</p>
+          <ul>
+            <li>Best for: operations, business teams, non-developers</li>
+            <li>Can: organize files, process documents, automate workflows</li>
+            <li>Currently in beta — check with your manager for access</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon" style="background:#F5F3FF;">📊</div>
+        <div class="tool-info">
+          <h3>Claude in Excel & PowerPoint (Beta)</h3>
+          <div class="tool-tagline">Claude embedded directly inside your Microsoft Office apps</div>
+          <p>These beta integrations bring Claude right into Excel and PowerPoint. Get help with formulas, data analysis, slide creation, and presentations without leaving the app.</p>
+          <ul>
+            <li>Claude in Excel: formula writing, data analysis, chart ideas</li>
+            <li>Claude in PowerPoint: slide structuring, content writing, design suggestions</li>
+            <li>Claude in Chrome: browse with Claude as your AI copilot</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon" style="background:#FEF3C7;">🔌</div>
+        <div class="tool-info">
+          <h3>Claude API (For Builders)</h3>
+          <div class="tool-tagline">For teams building AI-powered products and internal tools</div>
+          <p>If you're on a product or engineering team that wants to embed Claude into an Intuit product or internal tool, the API is the way to do it. It gives programmatic access to Claude's capabilities.</p>
+          <ul>
+            <li>Best for: product engineers, platform teams, AI teams</li>
+            <li>Latest models: Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5</li>
+            <li>Documentation: docs.claude.ai</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Which Tool Should I Use?</h2>
+      <table class="compare-table">
+        <thead>
+          <tr><th>If you want to…</th><th>Use this</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Write, research, brainstorm</td><td><span class="badge badge-blue">Claude.ai Chat</span></td></tr>
+          <tr><td>Code faster, fix bugs, review PRs</td><td><span class="badge badge-green">Claude Code</span></td></tr>
+          <tr><td>Automate file/task workflows (no code)</td><td><span class="badge badge-teal">Cowork</span></td></tr>
+          <tr><td>Work with spreadsheets or slides</td><td><span class="badge badge-purple">Excel / PowerPoint</span></td></tr>
+          <tr><td>Build an AI-powered product feature</td><td><span class="badge badge-gold">Claude API</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('how-claude-works')">← Module 2</button>
+        <button class="btn btn-primary" onclick="navigate('activities')">Module 4: Activities →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 4: ACTIVITIES ──────────────────────────── -->
+  <div id="section-activities" class="section">
+    <div class="section-hero" style="background: linear-gradient(135deg, #004D2A, #007A45);">
+      <div class="hero-tag">Module 4</div>
+      <h1>Hands-On Activities</h1>
+      <p>The best way to learn Claude is to use it. Try these real-world Intuit scenarios — copy the prompts and test them yourself in Claude.ai.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~12 minutes</span></div>
+        <div class="hero-meta-item">🎯 <span>5 activities</span></div>
+      </div>
+    </div>
+    <div class="content">
+      <p>Each activity below gives you a realistic Intuit work scenario and a ready-to-use prompt. Click <strong>Copy</strong> to grab the prompt, then open Claude.ai and try it out.</p>
+
+      <!-- Activity 1 -->
+      <div class="activity-box">
+        <div class="act-header">
+          <div class="act-num" style="background:var(--blue)">1</div>
+          <div>
+            <div class="act-title">Summarize a Long Document</div>
+            <div class="act-meta">✍️ Writing · ⏱ 3 min · 👤 All employees</div>
+          </div>
+        </div>
+        <div class="act-body">
+          <div class="act-scenario"><strong>Scenario:</strong> Your manager just sent you a 40-page PDF of the Q4 strategic plan and wants you to share the key highlights with your team in a quick standup tomorrow.</div>
+          <div class="prompt-box">
+            <div class="prompt-label">Prompt to Try</div>
+            <button class="copy-btn" onclick="copyPrompt(this, 'act1')">Copy</button>
+            <div class="prompt-text" id="act1">I'm going to paste a long strategic planning document below. Please read it carefully and give me:
+1. A 3-sentence executive summary
+2. The top 5 priorities for next quarter (as bullets)
+3. Any risks or concerns mentioned
+4. Key dates or deadlines I should know about
+
+Keep the language simple — I need to explain this to my team in 5 minutes.
+
+[Paste your document here]</div>
+          </div>
+          <div class="tip"><strong>What to notice:</strong> Claude structures the output exactly as asked. Try changing the format (e.g., ask for a table instead of bullets) and see how Claude adapts.</div>
+        </div>
+      </div>
+
+      <!-- Activity 2 -->
+      <div class="activity-box">
+        <div class="act-header">
+          <div class="act-num" style="background:var(--teal)">2</div>
+          <div>
+            <div class="act-title">Write a Professional Email</div>
+            <div class="act-meta">✍️ Communication · ⏱ 3 min · 👤 All employees</div>
+          </div>
+        </div>
+        <div class="act-body">
+          <div class="act-scenario"><strong>Scenario:</strong> A cross-functional project is running 2 weeks behind due to a dependency from another team. You need to send a diplomatic email to the team lead asking them to reprioritize without damaging the relationship.</div>
+          <div class="prompt-box">
+            <div class="prompt-label">Prompt to Try</div>
+            <button class="copy-btn" onclick="copyPrompt(this, 'act2')">Copy</button>
+            <div class="prompt-text" id="act2">Help me write a professional email to a peer team lead at Intuit. The context:
+- Our shared project (customer data pipeline) is 2 weeks behind schedule
+- Their team owns a key API integration that's blocking us
+- I want to escalate without creating conflict — we need this relationship long-term
+- Tone: direct but collaborative, not blaming
+
+The email should be under 200 words and end with a clear proposed next step (a 30-min sync this week).</div>
+          </div>
+          <div class="tip"><strong>What to notice:</strong> Notice how Claude balances directness with diplomacy. Try asking it to make the tone "more urgent" or "more casual" and compare the outputs.</div>
+        </div>
+      </div>
+
+      <!-- Activity 3 -->
+      <div class="activity-box">
+        <div class="act-header">
+          <div class="act-num" style="background:var(--purple)">3</div>
+          <div>
+            <div class="act-title">Brainstorm Product Ideas</div>
+            <div class="act-meta">💡 Ideation · ⏱ 4 min · 👤 Product, Design, Engineering</div>
+          </div>
+        </div>
+        <div class="act-body">
+          <div class="act-scenario"><strong>Scenario:</strong> Your team is in early discovery for a new QuickBooks feature to help small business owners better understand their cash flow. You've been asked to come to the brainstorm with 10 ideas.</div>
+          <div class="prompt-box">
+            <div class="prompt-label">Prompt to Try</div>
+            <button class="copy-btn" onclick="copyPrompt(this, 'act3')">Copy</button>
+            <div class="prompt-text" id="act3">You are a senior product designer at a fintech company with deep experience in small business software. 
+
+Generate 10 creative feature ideas for a QuickBooks cash flow dashboard aimed at small business owners (1–20 employees) who are not financial experts. 
+
+For each idea, give:
+- Feature name (catchy, 2–4 words)
+- One sentence description
+- The core problem it solves
+
+Prioritize ideas that are simple to understand, visually engaging, and can be built incrementally. Think outside standard fintech — what would delight a small business owner who dreads looking at their finances?</div>
+          </div>
+          <div class="tip"><strong>What to notice:</strong> The "role" framing ("You are a senior product designer...") shapes Claude's perspective. Try removing it and see how the ideas change.</div>
+        </div>
+      </div>
+
+      <!-- Activity 4 -->
+      <div class="activity-box">
+        <div class="act-header">
+          <div class="act-num" style="background:var(--green)">4</div>
+          <div>
+            <div class="act-title">Explain a Technical Concept</div>
+            <div class="act-meta">🎓 Learning · ⏱ 3 min · 👤 All employees</div>
+          </div>
+        </div>
+        <div class="act-body">
+          <div class="act-scenario"><strong>Scenario:</strong> You keep hearing about "RAG" (Retrieval-Augmented Generation) in AI meetings but you're not sure what it means. You want a clear, jargon-free explanation.</div>
+          <div class="prompt-box">
+            <div class="prompt-label">Prompt to Try</div>
+            <button class="copy-btn" onclick="copyPrompt(this, 'act4')">Copy</button>
+            <div class="prompt-text" id="act4">Explain "Retrieval-Augmented Generation" (RAG) to me as if I'm a non-technical Intuit employee — someone who works in finance or operations and has a general understanding of AI but no engineering background.
+
+Use an analogy to make it concrete. Then explain:
+1. Why it matters for enterprise AI
+2. How Intuit might use it (one example)
+3. One limitation I should know about
+
+Keep the whole response under 300 words.</div>
+          </div>
+          <div class="tip"><strong>What to notice:</strong> The "explain to me as if I'm..." framing controls complexity. Try changing the audience to "a 10-year-old" or "a software engineer" and compare.</div>
+        </div>
+      </div>
+
+      <!-- Activity 5 -->
+      <div class="activity-box">
+        <div class="act-header">
+          <div class="act-num" style="background:var(--gold)">5</div>
+          <div>
+            <div class="act-title">Write an Excel Formula</div>
+            <div class="act-meta">📊 Data · ⏱ 3 min · 👤 Finance, Ops, Analytics</div>
+          </div>
+        </div>
+        <div class="act-body">
+          <div class="act-scenario"><strong>Scenario:</strong> You have a sales tracking spreadsheet with columns for Region, Product, and Revenue. You want a formula that sums revenue only for a specific region and product combination.</div>
+          <div class="prompt-box">
+            <div class="prompt-label">Prompt to Try</div>
+            <button class="copy-btn" onclick="copyPrompt(this, 'act5')">Copy</button>
+            <div class="prompt-text" id="act5">I have an Excel spreadsheet with these columns:
+- Column A: Region (e.g., "West", "East", "Central")
+- Column B: Product (e.g., "TurboTax", "QuickBooks", "Mint")
+- Column C: Revenue (numbers)
+
+Data starts at row 2. I want a formula that sums all revenue in Column C where Region = "West" AND Product = "TurboTax".
+
+Please:
+1. Give me the exact formula
+2. Explain how it works in plain English
+3. Tell me how to modify it if I want to make the Region or Product dynamic (based on a dropdown cell)</div>
+          </div>
+          <div class="tip"><strong>What to notice:</strong> Claude gives you the formula AND explains the logic. Always ask Claude to explain — that's how you learn, not just copy-paste.</div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('tools-features')">← Module 3</button>
+        <button class="btn btn-primary" onclick="navigate('best-practices')">Module 5: Best Practices →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 5: BEST PRACTICES ─────────────────────── -->
+  <div id="section-best-practices" class="section">
+    <div class="section-hero" style="background: linear-gradient(135deg, #78350F, #B45309);">
+      <div class="hero-tag">Module 5</div>
+      <h1>Best Practices</h1>
+      <p>Get the most out of Claude — safely, effectively, and responsibly. These habits separate power users from casual users.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~7 minutes</span></div>
+        <div class="hero-meta-item">⭐ <span>4 principles</span></div>
+      </div>
+    </div>
+    <div class="content">
+
+      <h2>Do's and Don'ts</h2>
+      <div class="do-dont">
+        <div class="do-box">
+          <h4>✅ Do</h4>
+          <ul>
+            <li>Give Claude clear context and role framing</li>
+            <li>Specify the format you want (bullets, table, prose)</li>
+            <li>Iterate — ask for revisions and improvements</li>
+            <li>Fact-check important claims and numbers</li>
+            <li>Use Claude as a thought partner, not a replacement for judgment</li>
+            <li>Ask Claude to explain its reasoning ("Why did you suggest X?")</li>
+            <li>Use Projects in Claude.ai to give persistent context</li>
+          </ul>
+        </div>
+        <div class="dont-box">
+          <h4>❌ Don't</h4>
+          <ul>
+            <li>Paste confidential customer PII without checking policy</li>
+            <li>Treat Claude's output as fact without reviewing</li>
+            <li>Use Claude for decisions it shouldn't make alone (legal, medical)</li>
+            <li>Send sensitive competitive data to external Claude tools</li>
+            <li>Assume Claude knows Intuit-specific context it wasn't given</li>
+            <li>Submit Claude-generated work without a human review pass</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Prompting Power Tips</h2>
+      <div class="card-grid two">
+        <div class="card blue">
+          <h3>🪄 Use "Think Step by Step"</h3>
+          <p>For complex problems, add "Think through this step by step before answering." This dramatically improves accuracy on reasoning tasks.</p>
+        </div>
+        <div class="card teal">
+          <h3>📏 Specify Length</h3>
+          <p>Don't accept a novel when you need a paragraph. Always tell Claude: "in under 100 words," "3 bullet points max," or "a full detailed outline."</p>
+        </div>
+        <div class="card green">
+          <h3>🔄 Ask for Alternatives</h3>
+          <p>Don't settle for the first version. Ask: "Give me 3 different versions of this" or "What would a more conservative version look like?"</p>
+        </div>
+        <div class="card purple">
+          <h3>🪞 Ask Claude to Review Its Own Work</h3>
+          <p>After Claude gives an answer, try: "What are the weaknesses in this response?" or "What did I miss?" Claude is good at self-critique.</p>
+        </div>
+        <div class="card gold">
+          <h3>📎 Attach Context Files</h3>
+          <p>Upload PDFs, spreadsheets, or text files directly. Claude can read and reason about long documents — use this instead of manually pasting.</p>
+        </div>
+        <div class="card blue">
+          <h3>💾 Use Projects for Ongoing Work</h3>
+          <p>Create a Claude "Project" for recurring tasks (e.g., weekly reports). Add context once, and Claude remembers it across conversations.</p>
+        </div>
+      </div>
+
+      <h2>Data Privacy at Intuit</h2>
+      <div class="warning">
+        ⚠️ <strong>Data Handling:</strong> Before sharing any document or data with Claude, ask yourself: "Would I be comfortable if this was shared outside Intuit?" If not, don't include it. Refer to Intuit's AI Use Policy for specific guidance on data classifications.
+      </div>
+
+      <p>Here's a quick reference for what's generally OK vs. needs review:</p>
+      <table class="compare-table">
+        <thead>
+          <tr><th>Data Type</th><th>Generally OK</th><th>Needs Review</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Your own work drafts</td><td>✅</td><td></td></tr>
+          <tr><td>Internal meeting notes (anonymized)</td><td>✅</td><td></td></tr>
+          <tr><td>Public competitor info</td><td>✅</td><td></td></tr>
+          <tr><td>Non-confidential strategy docs</td><td>✅</td><td></td></tr>
+          <tr><td>Customer PII (names, SSN, financial data)</td><td></td><td>⚠️ Check policy</td></tr>
+          <tr><td>Unreleased product roadmaps</td><td></td><td>⚠️ Check policy</td></tr>
+          <tr><td>Partner contracts & legal agreements</td><td></td><td>⚠️ Check policy</td></tr>
+        </tbody>
+      </table>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('activities')">← Module 4</button>
+        <button class="btn btn-primary" onclick="navigate('quiz')">Module 6: Knowledge Check →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODULE 6: QUIZ ────────────────────────────────── -->
+  <div id="section-quiz" class="section">
+    <div class="section-hero" style="background: linear-gradient(135deg, #7F1D1D, #B91C1C);">
+      <div class="hero-tag">Module 6</div>
+      <h1>Knowledge Check</h1>
+      <p>Let's see what you've learned! Answer these 5 questions to complete the training. You can revisit any module if you need a refresher.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">⏱ <span>~5 minutes</span></div>
+        <div class="hero-meta-item">❓ <span>5 questions</span></div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Q1 -->
+      <div class="quiz-card">
+        <div class="quiz-q">1. What is the primary factor that determines the quality of Claude's response?</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q1')">The speed of your internet connection</div>
+        <div class="quiz-option" onclick="answer(this, true, 'q1')">The quality and clarity of your prompt</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q1')">The length of your message</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q1')">The time of day you use Claude</div>
+        <div class="quiz-feedback" id="fb-q1-correct" data-q="q1" data-type="correct">✅ Correct! Your prompt is everything. The clearer and more specific you are — including role, context, task, and format — the better Claude's output will be.</div>
+        <div class="quiz-feedback" id="fb-q1-wrong" data-q="q1" data-type="wrong">❌ Not quite. The biggest factor is <strong>the quality of your prompt</strong>. Review Module 2 to learn the 4 elements of a great prompt.</div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-card">
+        <div class="quiz-q">2. Which Claude tool is specifically designed for non-technical employees to automate file and task management without writing code?</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q2')">Claude API</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q2')">Claude Code</div>
+        <div class="quiz-option" onclick="answer(this, true, 'q2')">Cowork</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q2')">Claude in Excel</div>
+        <div class="quiz-feedback" id="fb-q2-correct" data-q="q2" data-type="correct">✅ Correct! Cowork is the desktop agent designed for non-developers. It lets you automate file and task workflows without writing a single line of code.</div>
+        <div class="quiz-feedback" id="fb-q2-wrong" data-q="q2" data-type="wrong">❌ Not quite. The answer is <strong>Cowork</strong> — the desktop app for non-technical employees. Review Module 3 for a breakdown of all Claude tools.</div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-card">
+        <div class="quiz-q">3. Claude says something confidently, but you're not sure if it's accurate. What should you do?</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q3')">Trust Claude — it's an AI, it doesn't make mistakes</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q3')">Ignore the response and start over</div>
+        <div class="quiz-option" onclick="answer(this, true, 'q3')">Verify the claim independently before using it</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q3')">Ask Claude the same question again</div>
+        <div class="quiz-feedback" id="fb-q3-correct" data-q="q3" data-type="correct">✅ Correct! Claude can "hallucinate" — stating things that sound plausible but are incorrect. Always verify important claims, especially numbers, facts, and legal or policy information.</div>
+        <div class="quiz-feedback" id="fb-q3-wrong" data-q="q3" data-type="wrong">❌ Not quite. Claude can make mistakes — a phenomenon called "hallucination." The right move is to <strong>verify independently</strong>. Review Module 2 for more on limitations.</div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-card">
+        <div class="quiz-q">4. You want to use Claude to help write a report, but you want it to write like a senior analyst. What prompting technique should you use?</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q4')">Ask Claude to "just be smart"</div>
+        <div class="quiz-option" onclick="answer(this, true, 'q4')">Give Claude a role: "Act as a senior analyst with 10 years of experience..."</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q4')">Use all caps in your prompt</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q4')">Use Claude Code instead of the chat interface</div>
+        <div class="quiz-feedback" id="fb-q4-correct" data-q="q4" data-type="correct">✅ Correct! Role framing is one of the 4 key elements of a great prompt. Telling Claude who to "be" shapes its perspective, tone, and depth of response significantly.</div>
+        <div class="quiz-feedback" id="fb-q4-wrong" data-q="q4" data-type="wrong">❌ Not quite. The answer is <strong>role framing</strong> — telling Claude "Act as a senior analyst..." primes it to respond with the right expertise and tone. Review Module 2.</div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="quiz-card">
+        <div class="quiz-q">5. Which of the following is generally NOT okay to share with Claude without checking Intuit's data policy?</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q5')">Your own draft of a project proposal</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q5')">Publicly available competitor news</div>
+        <div class="quiz-option" onclick="answer(this, true, 'q5')">Customer PII such as names and Social Security Numbers</div>
+        <div class="quiz-option" onclick="answer(this, false, 'q5')">An anonymized meeting agenda</div>
+        <div class="quiz-feedback" id="fb-q5-correct" data-q="q5" data-type="correct">✅ Correct! Customer PII (Personally Identifiable Information) like names, SSNs, and financial data requires careful handling. Always check Intuit's AI Use Policy before sharing sensitive data.</div>
+        <div class="quiz-feedback" id="fb-q5-wrong" data-q="q5" data-type="wrong">❌ Not quite. <strong>Customer PII</strong> (names, Social Security Numbers, financial data) should never be shared without checking policy. Review Module 5 for data privacy guidance.</div>
+      </div>
+
+      <div id="quiz-complete" style="display:none; margin-top:28px;">
+        <div style="background: linear-gradient(135deg, #003D6B, #005A8E); border-radius: 14px; padding: 32px; text-align: center; color: white;">
+          <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+          <h2 style="color:white; margin:0 0 10px; font-family:'Playfair Display',serif;">Training Complete!</h2>
+          <p style="color:rgba(255,255,255,0.75); font-size:15px; margin-bottom:24px;">You've finished the Claude at Intuit self-guided training. You're ready to start using Claude in your day-to-day work.</p>
+          <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <a href="https://claude.ai" target="_blank" style="background:var(--teal); color:white; padding:11px 24px; border-radius:8px; font-weight:700; font-size:14px; text-decoration:none;">Open Claude.ai →</a>
+            <button class="btn btn-secondary" onclick="navigate('welcome')" style="background:rgba(255,255,255,0.12); color:white; border-color:rgba(255,255,255,0.2);">Review Training</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="navigate('best-practices')">← Module 5</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const sections = ['welcome','what-is-claude','how-claude-works','tools-features','activities','best-practices','quiz'];
+  const completed = new Set();
+  const quizAnswered = {};
+
+  function navigate(id) {
+    // Hide all
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    // Show target
+    document.getElementById('section-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+
+    // Mark previous as done
+    const idx = sections.indexOf(id);
+    if (idx > 0) completed.add(sections[idx - 1]);
+    completed.add(id);
+
+    updateProgress();
+    window.scrollTo(0,0);
+    document.getElementById('main').scrollTo(0,0);
+  }
+
+  function updateProgress() {
+    completed.forEach(id => {
+      const navItem = document.getElementById('nav-' + id);
+      if (navItem) navItem.classList.add('done');
+    });
+    const pct = Math.round((completed.size / sections.length) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+  }
+
+  function copyPrompt(btn, id) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function answer(el, correct, qid) {
+    if (quizAnswered[qid]) return;
+    quizAnswered[qid] = true;
+
+    const card = el.closest('.quiz-card');
+    card.querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+
+    if (correct) {
+      el.classList.add('correct');
+      const fb = document.getElementById('fb-' + qid + '-correct');
+      fb.classList.add('show');
+    } else {
+      el.classList.add('wrong');
+      const fb = document.getElementById('fb-' + qid + '-wrong');
+      fb.classList.add('show');
+      // Highlight correct
+      card.querySelectorAll('.quiz-option').forEach(o => {
+        if (o.onclick && o.onclick.toString().includes('true')) {
+          o.classList.add('correct');
+          o.classList.remove('disabled');
+        }
+      });
+    }
+
+    // Check if all answered
+    const allAnswered = Object.keys(quizAnswered).length >= 5;
+    if (allAnswered) {
+      setTimeout(() => {
+        document.getElementById('quiz-complete').style.display = 'block';
+        completed.add('quiz');
+        updateProgress();
+      }, 800);
+    }
+  }
+
+  // Init
+  updateProgress();
+</script>
+</body>
+</html>
